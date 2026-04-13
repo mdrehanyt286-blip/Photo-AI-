@@ -23,7 +23,8 @@ import {
   VolumeX,
   Camera,
   Wand2,
-  Settings
+  Settings,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -34,12 +35,14 @@ export default function App() {
   const [isAutoMode, setIsAutoMode] = useState(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [globalError, setGlobalError] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>([]);
 
   const handleFrame = useCallback(async (base64: string) => {
     if (isAnalyzing || mode !== 'vision') return;
     
     setIsAnalyzing(true);
+    setGlobalError(null);
     try {
       const result = await analyzeFrame(base64);
       setAnalysis(result);
@@ -51,8 +54,9 @@ export default function App() {
         const voiceText = `Detected ${result.count} items. ${result.activity}. ${result.insights}`;
         speak(voiceText);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Analysis error:", error);
+      setGlobalError(error.message || "Vision analysis failed.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -106,6 +110,31 @@ export default function App() {
       </header>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+
+      <AnimatePresence>
+        {globalError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4"
+          >
+            <div className="bg-red-500/10 border border-red-500/20 backdrop-blur-md p-4 rounded-xl flex items-center justify-between gap-4 shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-500/20 rounded-lg">
+                  <Shield className="w-4 h-4 text-red-500" />
+                </div>
+                <p className="text-[10px] font-mono text-red-400 uppercase tracking-widest leading-relaxed">
+                  {globalError}
+                </p>
+              </div>
+              <button onClick={() => setGlobalError(null)} className="p-1 hover:bg-white/5 rounded-lg transition-colors">
+                <X className="w-4 h-4 text-red-500/50" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="max-w-7xl mx-auto p-6">
         <AnimatePresence mode="wait">

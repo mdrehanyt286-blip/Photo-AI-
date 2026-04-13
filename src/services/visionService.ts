@@ -49,8 +49,11 @@ export interface VisionAnalysis {
 
 export async function analyzeFrame(base64Image: string): Promise<VisionAnalysis> {
   try {
+    if (!getApiKey()) {
+      throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
+    }
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-1.5-flash",
       contents: [
         {
           parts: [
@@ -124,6 +127,9 @@ export async function analyzeFrame(base64Image: string): Promise<VisionAnalysis>
 
 export async function editImage(base64Image: string, prompt: string): Promise<string> {
   try {
+    if (!getApiKey()) {
+      throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
+    }
     const isUnfiltered = prompt.includes("SYSTEM_UNFILTERED_MODE");
     
     const systemPrompt = isUnfiltered 
@@ -204,8 +210,11 @@ export async function editImage(base64Image: string, prompt: string): Promise<st
 
 export async function deepAnalysis(base64Image: string): Promise<any> {
   try {
+    if (!getApiKey()) {
+      throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
+    }
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-1.5-flash",
       contents: [
         {
           parts: [
