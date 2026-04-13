@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, Shield, AlertTriangle } from 'lucide-react';
+import { X, Key, Shield, AlertTriangle, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { updateApiKey } from '../services/visionService';
+import { updateApiKey, verifyKey } from '../services/visionService';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -11,15 +11,40 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
     const savedKey = localStorage.getItem('GEMINI_API_KEY') || '';
     setApiKey(savedKey);
+    setTestResult(null);
   }, [isOpen]);
 
   const handleSave = () => {
     updateApiKey(apiKey);
     onClose();
+  };
+
+  const handleTest = async () => {
+    if (!apiKey.trim()) return;
+    setIsTesting(true);
+    setTestResult(null);
+    
+    // Temporarily save to test
+    const oldKey = localStorage.getItem('GEMINI_API_KEY');
+    localStorage.setItem('GEMINI_API_KEY', apiKey.trim());
+    
+    const result = await verifyKey();
+    
+    if (result.success) {
+      setTestResult({ success: true, message: "Bhai, key ekdum mast kaam kar rahi hai!" });
+    } else {
+      setTestResult({ success: false, message: result.error || "Key fail ho gayi." });
+      // Restore old key if test failed
+      if (oldKey) localStorage.setItem('GEMINI_API_KEY', oldKey);
+      else localStorage.removeItem('GEMINI_API_KEY');
+    }
+    setIsTesting(false);
   };
 
   const handleReset = () => {
@@ -57,7 +82,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   <input
                     type={showKey ? "text" : "password"}
                     value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
+                    onChange={(e) => {
+                      setApiKey(e.target.value);
+                      setTestResult(null);
+                    }}
                     placeholder="Enter your API key here..."
                     className="w-full bg-black border border-white/10 rounded-xl p-3 text-sm font-mono focus:outline-none focus:border-blue-500/50 transition-colors pr-10"
                   />
@@ -76,6 +104,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 </p>
               </div>
 
+              {testResult && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-3 rounded-xl border flex items-center gap-3 ${
+                    testResult.success ? 'bg-green-500/5 border-green-500/20 text-green-500' : 'bg-red-500/5 border-red-500/20 text-red-500'
+                  }`}
+                >
+                  {testResult.success ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                  <p className="text-[10px] font-mono uppercase tracking-tight leading-relaxed">
+                    {testResult.message}
+                  </p>
+                </motion.div>
+              )}
+
               <div className="p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-xl flex gap-3">
                 <AlertTriangle className="w-4 h-4 text-yellow-500 shrink-0" />
                 <p className="text-[9px] text-yellow-500/80 font-mono leading-relaxed uppercase tracking-tight">
@@ -83,18 +126,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 </p>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col gap-3 pt-2">
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleTest}
+                    disabled={isTesting || !apiKey.trim()}
+                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all border border-white/5 flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isTesting ? <Loader2 className="w-3 h-3 animate-spin" /> : <ActivityIcon className="w-3 h-3" />}
+                    Test Key
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 py-3 rounded-xl font-mono text-[10px] uppercase tracking-widest transition-all border border-white/5"
+                  >
+                    Reset
+                  </button>
+                </div>
                 <button
                   onClick={handleSave}
-                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all shadow-lg shadow-blue-500/20"
+                  disabled={isTesting}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
                 >
                   Save & Reload
-                </button>
-                <button
-                  onClick={handleReset}
-                  className="px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 py-3 rounded-xl font-mono text-[10px] uppercase tracking-widest transition-all border border-white/5"
-                >
-                  Reset
                 </button>
               </div>
             </div>
@@ -109,5 +163,11 @@ const EyeIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+
+const ActivityIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
   </svg>
 );

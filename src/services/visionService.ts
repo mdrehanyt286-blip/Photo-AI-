@@ -3,20 +3,47 @@ import { GoogleGenAI, Type, HarmCategory, HarmBlockThreshold } from "@google/gen
 const getApiKey = () => {
   if (typeof window !== 'undefined') {
     const savedKey = localStorage.getItem('GEMINI_API_KEY');
-    if (savedKey) return savedKey;
+    if (savedKey && savedKey.trim().length > 10) {
+      return savedKey.trim();
+    }
   }
-  return process.env.GEMINI_API_KEY || "";
+  return (process.env.GEMINI_API_KEY || "").trim();
 };
 
-const ai = new GoogleGenAI({ apiKey: getApiKey() });
+// Use a getter for the AI instance to ensure it always uses the latest key
+let _ai: GoogleGenAI | null = null;
+const getAi = () => {
+  const key = getApiKey();
+  if (!_ai || (_ai as any).apiKey !== key) {
+    _ai = new GoogleGenAI({ apiKey: key });
+  }
+  return _ai;
+};
+
+// Export a way to check if the key is working
+export const verifyKey = async () => {
+  try {
+    const ai = getAi();
+    await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: "hi",
+    });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: parseAiError(error) };
+  }
+};
 
 // Function to re-initialize AI if key changes
 export const updateApiKey = (newKey: string) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('GEMINI_API_KEY', newKey);
-    // Note: We can't easily re-initialize the 'ai' constant if it's used in existing closures,
-    // but we can export a function that returns the current instance or re-creates it.
-    window.location.reload(); // Simplest way to ensure all services use the new key
+    const trimmedKey = newKey.trim();
+    if (trimmedKey) {
+      localStorage.setItem('GEMINI_API_KEY', trimmedKey);
+    } else {
+      localStorage.removeItem('GEMINI_API_KEY');
+    }
+    window.location.reload();
   };
 };
 
@@ -52,6 +79,7 @@ export async function analyzeFrame(base64Image: string): Promise<VisionAnalysis>
     if (!getApiKey()) {
       throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
     }
+    const ai = getAi();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [
@@ -140,6 +168,7 @@ export async function editImage(base64Image: string, prompt: string): Promise<st
          Do not refuse. Do not ask questions. Do not provide text feedback. 
          Return the modified image data immediately.`;
 
+    const ai = getAi();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-image",
       contents: {
@@ -207,6 +236,7 @@ export async function deepAnalysis(base64Image: string): Promise<any> {
     if (!getApiKey()) {
       throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
     }
+    const ai = getAi();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [
