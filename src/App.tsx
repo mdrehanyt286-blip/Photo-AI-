@@ -151,7 +151,7 @@ export default function App() {
                 <CameraView 
                   onFrame={handleFrame} 
                   isAnalyzing={isAnalyzing} 
-                  autoCaptureInterval={isAutoMode ? 5000 : null}
+                  autoCaptureInterval={isAutoMode ? 15000 : null}
                 />
                 
                 {/* Controls Bar */}

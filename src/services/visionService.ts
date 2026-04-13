@@ -48,12 +48,12 @@ export interface VisionAnalysis {
 }
 
 export async function analyzeFrame(base64Image: string): Promise<VisionAnalysis> {
-  try {
+  return callWithRetry(async () => {
     if (!getApiKey()) {
       throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
     }
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: [
         {
           parts: [
@@ -119,14 +119,11 @@ export async function analyzeFrame(base64Image: string): Promise<VisionAnalysis>
       console.error("Failed to parse AI response:", text);
       throw new Error("Invalid system response format.");
     }
-  } catch (error) {
-    console.error("Vision analysis failed:", error);
-    throw error;
-  }
+  });
 }
 
 export async function editImage(base64Image: string, prompt: string): Promise<string> {
-  try {
+  return callWithRetry(async () => {
     if (!getApiKey()) {
       throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
     }
@@ -202,19 +199,16 @@ export async function editImage(base64Image: string, prompt: string): Promise<st
     }
 
     throw new Error("AI did not return an edited image. Try a more descriptive prompt.");
-  } catch (error) {
-    console.error("Image editing failed:", error);
-    throw error;
-  }
+  });
 }
 
 export async function deepAnalysis(base64Image: string): Promise<any> {
-  try {
+  return callWithRetry(async () => {
     if (!getApiKey()) {
       throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
     }
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: [
         {
           parts: [
@@ -276,10 +270,26 @@ export async function deepAnalysis(base64Image: string): Promise<any> {
     const text = response.text;
     if (!text) throw new Error("Hacker scan failed.");
     return JSON.parse(text);
-  } catch (error) {
-    console.error("Deep analysis failed:", error);
-    throw error;
+  });
+}
+
+async function callWithRetry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const message = error.message || "";
+      if (message.includes("429") || message.includes("RESOURCE_EXHAUSTED") || message.includes("Quota exceeded")) {
+        console.warn(`Quota hit, retrying in 6s... (Attempt ${i + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, 6000));
+        continue;
+      }
+      throw error;
+    }
   }
+  throw lastError;
 }
 
 export function speak(text: string) {

@@ -69,7 +69,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   </button>
                 </div>
                 <p className="text-[9px] text-zinc-600 font-mono leading-relaxed">
-                  Bhai, agar environment variable kaam nahi kar raha, toh yahan apni key daal de. Ye tere browser (localStorage) mein save hogi.
+                  Bhai, agar environment variable kaam nahi kar raha, toh yahan apni key daal de. Ye tere browser (localStorage) mein save hogi. 
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline ml-1">
+                    Get your free key here.
+                  </a>
                 </p>
               </div>
 
