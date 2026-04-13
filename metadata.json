@@ -1,0 +1,12 @@
+{
+  "name": "VisionAI Assistant",
+  "description": "Real-time AI computer vision assistant for object detection, activity analysis, and environment description.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "vision",
+    "voice"
+  ]
+}
