@@ -11,10 +11,12 @@ const getApiKey = () => {
 };
 
 // Use a getter for the AI instance to ensure it always uses the latest key
+let _currentKey = "";
 let _ai: GoogleGenAI | null = null;
 const getAi = () => {
   const key = getApiKey();
-  if (!_ai || (_ai as any).apiKey !== key) {
+  if (!_ai || _currentKey !== key) {
+    _currentKey = key;
     _ai = new GoogleGenAI({ apiKey: key });
   }
   return _ai;
@@ -77,7 +79,7 @@ export interface VisionAnalysis {
 export async function analyzeFrame(base64Image: string): Promise<VisionAnalysis> {
   return callWithRetry(async () => {
     if (!getApiKey()) {
-      throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
+      throw new Error("API_KEY_MISSING: Please add your API Key in Settings.");
     }
     const ai = getAi();
     const response = await ai.models.generateContent({
@@ -153,7 +155,7 @@ export async function analyzeFrame(base64Image: string): Promise<VisionAnalysis>
 export async function editImage(base64Image: string, prompt: string): Promise<string> {
   return callWithRetry(async () => {
     if (!getApiKey()) {
-      throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
+      throw new Error("API_KEY_MISSING: Please add your API Key in Settings.");
     }
     const isUnfiltered = prompt.includes("SYSTEM_UNFILTERED_MODE");
     
@@ -234,7 +236,7 @@ export async function editImage(base64Image: string, prompt: string): Promise<st
 export async function deepAnalysis(base64Image: string): Promise<any> {
   return callWithRetry(async () => {
     if (!getApiKey()) {
-      throw new Error("API_KEY_MISSING: Bhai, API Key nahi mil rahi. Settings mein ja kar apni key daal de.");
+      throw new Error("API_KEY_MISSING: Please add your API Key in Settings.");
     }
     const ai = getAi();
     const response = await ai.models.generateContent({
@@ -357,11 +359,13 @@ export function parseAiError(error: any): string {
   }
 
   if (message.includes("Quota exceeded") || message.includes("429") || message.includes("RESOURCE_EXHAUSTED")) {
-    return "QUOTA_EXHAUSTED: Bhai, system ki limit khatam ho gayi hai. Google ab aur requests nahi le raha. Settings mein apni personal API Key daal de, toh ye problem theek ho jayegi.";
+    const isImageModel = message.includes("flash-image") || message.includes("flash-preview-image");
+    const modelType = isImageModel ? "IMAGE" : "VISION";
+    return `[!] QUOTA_EXHAUSTED (${modelType})`;
   }
   
   if (message.includes("API_KEY_INVALID") || message.includes("API key not valid")) {
-    return "INVALID_API_KEY: Bhai, jo API Key tune daali hai wo galat hai. Ek baar check kar le.";
+    return "[!] INVALID_API_KEY";
   }
 
   return message;

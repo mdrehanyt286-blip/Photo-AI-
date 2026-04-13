@@ -37,9 +37,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     const result = await verifyKey();
     
     if (result.success) {
-      setTestResult({ success: true, message: "Bhai, key ekdum mast kaam kar rahi hai!" });
+      setTestResult({ success: true, message: "Key working perfectly!" });
     } else {
-      setTestResult({ success: false, message: result.error || "Key fail ho gayi." });
+      setTestResult({ success: false, message: result.error || "Key verification failed." });
       // Restore old key if test failed
       if (oldKey) localStorage.setItem('GEMINI_API_KEY', oldKey);
       else localStorage.removeItem('GEMINI_API_KEY');
@@ -97,9 +97,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   </button>
                 </div>
                 <p className="text-[9px] text-zinc-600 font-mono leading-relaxed">
-                  Bhai, agar environment variable kaam nahi kar raha, toh yahan apni key daal de. Ye tere browser (localStorage) mein save hogi. 
+                  Enter your personal API key to bypass system limits. 
                   <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline ml-1">
-                    Get your free key here.
+                    Get free key.
                   </a>
                 </p>
               </div>
@@ -121,9 +121,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
               <div className="p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-xl flex gap-3">
                 <AlertTriangle className="w-4 h-4 text-yellow-500 shrink-0" />
-                <p className="text-[9px] text-yellow-500/80 font-mono leading-relaxed uppercase tracking-tight">
-                  Warning: Saving a new key will reload the application to apply changes.
-                </p>
+                <div className="space-y-1">
+                  <p className="text-[9px] text-yellow-500/80 font-mono leading-relaxed uppercase tracking-tight font-bold">
+                    System Limits:
+                  </p>
+                  <p className="text-[8px] text-yellow-500/60 font-mono uppercase tracking-tight">
+                    Free tier has strict limits. Use "Low Power Mode" to save quota.
+                  </p>
+                </div>
               </div>
 
               <div className="flex flex-col gap-3 pt-2">

@@ -36,16 +36,9 @@ export const ImageEditor: React.FC = () => {
     const finalPrompt = customPrompt || prompt;
     if (!sourceImage || !finalPrompt) return;
 
-    const now = Date.now();
-    if (now - lastEditTime < 3000) {
-      setError("RATE_LIMIT: Bhai, thoda dheere! System ko saans lene de. 3 second baad try kar.");
-      return;
-    }
-
     setIsProcessing(true);
     setError(null);
     try {
-      setLastEditTime(now);
       const base64 = sourceImage.split(',')[1];
       const result = await editImage(base64, finalPrompt);
       setEditedImage(result);
@@ -313,7 +306,7 @@ export const ImageEditor: React.FC = () => {
             }`}
           >
             {isListening ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3" />}
-            {isListening ? 'Bhai is Listening...' : 'Voice Command'}
+            {isListening ? 'Listening...' : 'Voice Command'}
           </button>
         </div>
 

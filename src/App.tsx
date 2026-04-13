@@ -24,6 +24,7 @@ import {
   Camera,
   Wand2,
   Settings,
+  Zap,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -33,9 +34,23 @@ export default function App() {
   const [analysis, setAnalysis] = useState<VisionAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isAutoMode, setIsAutoMode] = useState(false);
+  const [isLowPowerMode, setIsLowPowerMode] = useState(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (globalError) {
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = setTimeout(() => {
+        setGlobalError(null);
+      }, 5000); // Dismiss after 5 seconds
+    }
+    return () => {
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    };
+  }, [globalError]);
   const [history, setHistory] = useState<string[]>([]);
 
   const handleFrame = useCallback(async (base64: string) => {
@@ -151,12 +166,27 @@ export default function App() {
                 <CameraView 
                   onFrame={handleFrame} 
                   isAnalyzing={isAnalyzing} 
-                  autoCaptureInterval={isAutoMode ? 30000 : null}
+                  autoCaptureInterval={isAutoMode && !isLowPowerMode ? 10000 : null}
                 />
                 
                 {/* Controls Bar */}
                 <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setIsLowPowerMode(!isLowPowerMode)}
+                      className={`p-2 rounded-lg border transition-all flex items-center gap-2 ${
+                        isLowPowerMode 
+                        ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-500' 
+                        : 'bg-zinc-800 text-zinc-500 border-white/5 hover:bg-zinc-700'
+                      }`}
+                      title="Low Power Mode (Saves Quota)"
+                    >
+                      <Zap className={`w-3 h-3 ${isLowPowerMode ? 'fill-current' : ''}`} />
+                      <span className="text-[10px] font-mono uppercase font-bold">
+                        {isLowPowerMode ? 'Low Power' : 'Normal'}
+                      </span>
+                    </button>
+
                     <button 
                       onClick={() => setIsAutoMode(!isAutoMode)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xs uppercase tracking-widest transition-all ${
