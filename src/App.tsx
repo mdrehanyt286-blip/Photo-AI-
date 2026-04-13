@@ -56,7 +56,12 @@ export default function App() {
       }
     } catch (error: any) {
       console.error("Analysis error:", error);
-      setGlobalError(error.message || "Vision analysis failed.");
+      const message = error.message || "";
+      if (message.includes("Quota exceeded") || message.includes("429") || message.includes("RESOURCE_EXHAUSTED")) {
+        setGlobalError("QUOTA_EXHAUSTED: Bhai, system ki limit khatam ho gayi hai. Settings mein apni personal API Key daal de.");
+      } else {
+        setGlobalError(message || "Vision analysis failed.");
+      }
     } finally {
       setIsAnalyzing(false);
     }

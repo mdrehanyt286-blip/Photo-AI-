@@ -47,7 +47,9 @@ export const ImageEditor: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       const message = err.message || "";
-      if (message.includes("violates safety policies") || 
+      if (message.includes("Quota exceeded") || message.includes("429") || message.includes("RESOURCE_EXHAUSTED")) {
+        setError("QUOTA_EXHAUSTED: Bhai, is model ki limit khatam ho gayi hai. Google ab aur requests nahi le raha. Settings mein apni personal API Key daal de, toh ye problem theek ho jayegi.");
+      } else if (message.includes("violates safety policies") || 
           message.includes("Blocked by safety filters") || 
           message.includes("IMAGE_SAFETY") ||
           message.includes("HARD_FIREWALL_DETECTED") ||
