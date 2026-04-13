@@ -342,10 +342,10 @@ export const ImageEditor: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
+            className="p-2 bg-red-500/10 border border-red-500/20 rounded-lg"
           >
-            <p className="text-[10px] font-mono text-red-400 uppercase tracking-widest text-center leading-relaxed">
-              {isHackerMode ? 'CRITICAL_FAILURE: ' : 'System Error: '}{error}
+            <p className="text-[9px] font-mono text-red-500 uppercase tracking-widest text-center">
+              {error}
             </p>
           </motion.div>
         )}

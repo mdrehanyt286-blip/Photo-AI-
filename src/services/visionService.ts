@@ -359,13 +359,11 @@ export function parseAiError(error: any): string {
   }
 
   if (message.includes("Quota exceeded") || message.includes("429") || message.includes("RESOURCE_EXHAUSTED")) {
-    const isImageModel = message.includes("flash-image") || message.includes("flash-preview-image");
-    const modelType = isImageModel ? "IMAGE" : "VISION";
-    return `[!] QUOTA_EXHAUSTED (${modelType})`;
+    return "[!] QUOTA_EXHAUSTED";
   }
   
   if (message.includes("API_KEY_INVALID") || message.includes("API key not valid")) {
-    return "[!] INVALID_API_KEY";
+    return "[!] INVALID_KEY";
   }
 
   return message;

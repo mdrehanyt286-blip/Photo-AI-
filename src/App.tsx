@@ -136,10 +136,7 @@ export default function App() {
           >
             <div className="bg-red-500/10 border border-red-500/20 backdrop-blur-md p-4 rounded-xl flex items-center justify-between gap-4 shadow-xl">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-500/20 rounded-lg">
-                  <Shield className="w-4 h-4 text-red-500" />
-                </div>
-                <p className="text-[10px] font-mono text-red-400 uppercase tracking-widest leading-relaxed">
+                <p className="text-[9px] font-mono text-red-500 uppercase tracking-widest">
                   {globalError}
                 </p>
               </div>
