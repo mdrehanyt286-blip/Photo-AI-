@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CameraView } from './components/CameraView';
 import { ImageEditor } from './components/ImageEditor';
 import { SettingsModal } from './components/SettingsModal';
-import { analyzeFrame, VisionAnalysis, speak } from './services/visionService';
+import { analyzeFrame, VisionAnalysis, speak, parseAiError } from './services/visionService';
 import { 
   Activity, 
   Box, 
@@ -56,12 +56,7 @@ export default function App() {
       }
     } catch (error: any) {
       console.error("Analysis error:", error);
-      const message = error.message || "";
-      if (message.includes("Quota exceeded") || message.includes("429") || message.includes("RESOURCE_EXHAUSTED")) {
-        setGlobalError("QUOTA_EXHAUSTED: Bhai, system ki limit khatam ho gayi hai. Settings mein apni personal API Key daal de.");
-      } else {
-        setGlobalError(message || "Vision analysis failed.");
-      }
+      setGlobalError(parseAiError(error));
     } finally {
       setIsAnalyzing(false);
     }

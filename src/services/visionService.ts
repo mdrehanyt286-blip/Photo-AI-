@@ -298,3 +298,31 @@ export function speak(text: string) {
   
   window.speechSynthesis.speak(utterance);
 }
+
+export function parseAiError(error: any): string {
+  console.error("Raw AI Error:", error);
+  let message = error.message || String(error);
+  
+  // Try to parse if it's a JSON string from the SDK
+  try {
+    if (message.includes('{')) {
+      const jsonStr = message.substring(message.indexOf('{'));
+      const parsed = JSON.parse(jsonStr);
+      if (parsed.error && parsed.error.message) {
+        message = parsed.error.message;
+      }
+    }
+  } catch (e) {
+    // Not valid JSON or parsing failed
+  }
+
+  if (message.includes("Quota exceeded") || message.includes("429") || message.includes("RESOURCE_EXHAUSTED")) {
+    return "QUOTA_EXHAUSTED: Bhai, system ki limit khatam ho gayi hai. Google ab aur requests nahi le raha. Settings mein apni personal API Key daal de, toh ye problem theek ho jayegi.";
+  }
+  
+  if (message.includes("API_KEY_INVALID") || message.includes("API key not valid")) {
+    return "INVALID_API_KEY: Bhai, jo API Key tune daali hai wo galat hai. Ek baar check kar le.";
+  }
+
+  return message;
+}

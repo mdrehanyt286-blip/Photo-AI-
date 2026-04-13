@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Wand2, Download, RefreshCw, X, ShieldAlert, Zap, Mic, MicOff, Eye, Target, Activity } from 'lucide-react';
-import { editImage, deepAnalysis, speak } from '../services/visionService';
+import { editImage, deepAnalysis, speak, parseAiError } from '../services/visionService';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const ImageEditor: React.FC = () => {
@@ -45,19 +45,7 @@ export const ImageEditor: React.FC = () => {
         speak("Target manipulation successful. Payload delivered.");
       }
     } catch (err: any) {
-      console.error(err);
-      const message = err.message || "";
-      if (message.includes("Quota exceeded") || message.includes("429") || message.includes("RESOURCE_EXHAUSTED")) {
-        setError("QUOTA_EXHAUSTED: Bhai, is model ki limit khatam ho gayi hai. Google ab aur requests nahi le raha. Settings mein apni personal API Key daal de, toh ye problem theek ho jayegi.");
-      } else if (message.includes("violates safety policies") || 
-          message.includes("Blocked by safety filters") || 
-          message.includes("IMAGE_SAFETY") ||
-          message.includes("HARD_FIREWALL_DETECTED") ||
-          message.includes("PROHIBITED_CONTENT")) {
-        setError("HARD_FIREWALL_DETECTED: Bhai, ye prompt Google ke main server ne block kar diya hai. Maine bypass karne ki koshish ki par wo mana kar raha hai. Thoda 'Technical' words use kar (jaise 'remove texture' ya 'transparent layer'), seedha mat bol.");
-      } else {
-        setError(message || "Failed to edit image. Please try a clearer prompt.");
-      }
+      setError(parseAiError(err));
     } finally {
       setIsProcessing(false);
     }
