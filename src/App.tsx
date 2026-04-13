@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CameraView } from './components/CameraView';
 import { ImageEditor } from './components/ImageEditor';
+import { SettingsModal } from './components/SettingsModal';
 import { analyzeFrame, VisionAnalysis, speak } from './services/visionService';
 import { 
   Activity, 
@@ -21,7 +22,8 @@ import {
   Volume2,
   VolumeX,
   Camera,
-  Wand2
+  Wand2,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -31,6 +33,7 @@ export default function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isAutoMode, setIsAutoMode] = useState(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
 
   const handleFrame = useCallback(async (base64: string) => {
@@ -93,8 +96,16 @@ export default function App() {
           >
             {isVoiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
+          <button 
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-2 rounded-full text-zinc-500 bg-zinc-800 hover:text-white transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
         </div>
       </header>
+
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
       <main className="max-w-7xl mx-auto p-6">
         <AnimatePresence mode="wait">

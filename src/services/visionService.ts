@@ -1,6 +1,24 @@
 import { GoogleGenAI, Type, HarmCategory, HarmBlockThreshold } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const getApiKey = () => {
+  if (typeof window !== 'undefined') {
+    const savedKey = localStorage.getItem('GEMINI_API_KEY');
+    if (savedKey) return savedKey;
+  }
+  return process.env.GEMINI_API_KEY || "";
+};
+
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
+
+// Function to re-initialize AI if key changes
+export const updateApiKey = (newKey: string) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('GEMINI_API_KEY', newKey);
+    // Note: We can't easily re-initialize the 'ai' constant if it's used in existing closures,
+    // but we can export a function that returns the current instance or re-creates it.
+    window.location.reload(); // Simplest way to ensure all services use the new key
+  };
+};
 
 const safetySettings = [
   {
